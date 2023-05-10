@@ -1,6 +1,10 @@
 #include <iostream>
 using namespace std;
 #include <vector>
+#include <fstream>
+
+ifstream f("C:\\Users\\User\\CLionProjects\\BinomHeap\\mergeheap.in");
+ofstream g("C:\\Users\\User\\CLionProjects\\BinomHeap\\mergeheap.out");
 
 class Nod{
 public:
@@ -255,6 +259,49 @@ int main() {
 
     h.display();
 
+    int operatii, obiecte;
+    vector<Heap> heapuri;
+    f >> obiecte >> operatii;
+    for(int i=1;i<=obiecte;i++){
+        Heap h2;
+        heapuri.push_back(h2);
+    }
+
+
+    int operatie;
+    while(f>> operatie) {
+        switch (operatie) {
+            case 1: {
+                int nr_heap, element;
+                f >> nr_heap >> element;
+                heapuri[nr_heap].insert(element);
+                break;
+            }
+
+            case 2:{
+                int nr_heap;
+                f >> nr_heap;
+                g << heapuri[nr_heap].get_nod_max();
+                heapuri[nr_heap].eliminare_maxim();
+                break;
+            }
+
+            case 3:{
+                int nr_heap1, nr_heap2;
+                f >> nr_heap1 >> nr_heap2;
+                heapuri[nr_heap1] + heapuri[nr_heap2];
+                break;
+            }
+            default:{
+                cout << "IDK";
+            }
+
+          
+
+        }
+    }
+    f.close();
+    g.close();
 
     return 0;
 }
