@@ -1,288 +1,260 @@
 #include <iostream>
-#include <list>
 using namespace std;
+#include <vector>
+
 class Nod{
-    int valoare, ordin;
-    Nod* copil_stanga;
-    Nod* frate;
+public:
+    int valoare;
+    int grad;
+    Nod* tata;
+    vector<Nod*> fii;
 
 public:
-    int getOrdin() const {
-        return ordin;
-    }
-
-    void setOrdin(int ordin) {
-        Nod::ordin = ordin;
-    }
-
-
-    Nod(int valaore){
-        this->valoare = valoare;
-        copil_stanga = nullptr;
-        frate = nullptr;
-        ordin = 0;
-    }
-
     int getValoare() const {
         return valoare;
     }
 
-    Nod *getCopilStanga() const {
-        return copil_stanga;
-    }
+    Nod(int valoare, int grad, Nod *tata, const vector<Nod *> &fii) : valoare(valoare), grad(grad), tata(tata),
+                                                                      fii(fii) {};
+    Nod(){
+        valoare = -1;
+        grad = 0;
+        tata = nullptr;
 
-    Nod *getFrate() const {
-        return frate;
+    }
+    void display(){
+        if (grad == 0)
+            cout << endl <<"Valoare nod: " << valoare << " nu are fii" <<endl;
+        if(grad > 0) {
+            cout <<  "Valoare nod: " << valoare << endl;
+            cout << "Valori fii nod " << valoare << ": ";
+            for (int i = 0; i < grad; i++) {
+                cout << fii[i]->valoare << " ";
+            }
+            for (int i = 0; i < grad; i++)
+                fii[i]->display();
+            cout << endl;
+        }
+        cout << endl;
     }
 
     void setValoare(int valoare) {
         Nod::valoare = valoare;
     }
 
-    void setCopilStanga(Nod *copilStanga) {
-        copil_stanga = copilStanga;
-    }
-
-    void setFrate(Nod *frate) {
-        Nod::frate = frate;
-    }
-
-
-    void add_copil(Nod* aux){
-        aux->setFrate(this->getCopilStanga());
-        this->setCopilStanga(aux);
-        aux->ordin = ordin+1;
-    }
-
-
 
 
 
 };
-
 class Heap{
-    list<Nod*> radacina;
-    Nod* mergeHeap2(Nod* h1, Nod* h2){
-        if(h1->getValoare() < h2->getValoare()) {
-            h2->add_copil(h1);
-            return h2;
-
-        }
-        else{
-            h1->add_copil(h2);
-            return h1;
-        }
-
-    }
-
 public:
+    vector<Nod*> radacini;
+    Nod* max_nod = new Nod();
 
-
-
-
-    void Erase(){
-        radacina.clear();
+    Heap(const Heap &h)
+    {
+        radacini = h.radacini;
+        max_nod = h.max_nod;
     }
 
+    Heap(){
+        max_nod = NULL;
+    }
 
-    Heap merge(Heap h1, Heap h2){
-        auto i = h1.radacina.begin();
-        auto j = h2.radacina.begin();
+    void delete_heap ()
+    {
+        radacini.clear();
+        max_nod = NULL;
+    }
 
-        list<Nod*> h;
-        while (i!=h1.radacina.end() && j!=h2.radacina.end()){
-            if((*i)->getOrdin() <= (*j)->getOrdin()){
-                h.push_back(*i);
+    void insert(int valoare){
+        Nod *nod = new Nod();
+        nod->valoare = valoare;
+        if(radacini.size() == 0)
+        {
+            radacini.push_back(nod);
+            radacini.push_back(NULL);
+            max_nod = nod;
+        }
+        else
+        {
+            if(max_nod->valoare < nod->valoare)
+                max_nod = nod;
+            int i = 0;
+            Nod* radacina = nod;
+            Nod* aux = radacini[0];
+            while (aux != NULL)
+            {
+                if (aux->valoare > radacina->valoare)
+                {
+                    aux->fii.push_back(radacina);
+                    radacina->tata = aux;
+                    aux->grad ++;
+                    radacina = aux;
+                }
+                else{
+                    radacina->fii.push_back(aux);
+                    aux->tata = radacina;
+                    radacina->grad ++;
+                }
+                if(radacina->grad == radacini.size())
+                    radacini.push_back(NULL);
+                radacini[i] = NULL;
                 i++;
+                aux = radacini[i];
             }
-            else{
-                h.push_back(*j);
-                j++;
-            }
-
-
+            radacini[i] = radacina;
         }
-        while (i!=h1.radacina.end()){
-            h.push_back(*i);
-            i++;
-        }
-        while (j!=h2.radacina.end()){
-            h.push_back(*j);
-            j++;
-        }
-
     }
 
-    list<Nod*> Elim_Min_Arb(Nod* aux){
-        Nod* aux2 = aux->getCopilStanga();
-        list<Nod*> h;
-        Nod* aux3;
+    int get_nod_max() {return max_nod->valoare;}
 
-        while(aux2){
-            aux3 = aux2;
-            aux2 = aux2->getFrate();
-            aux3->setFrate(nullptr);
-            h.push_back(aux3);
+    Heap& operator + (Heap &h)
+    {
+        int i;
+        if (h.radacini.size() > radacini.size())
+        {
+            i = h.radacini.size() - radacini.size();
+            while (i)
+            {
+                radacini.push_back(NULL);
+                i --;
+            }
         }
-
-        return h;
+        for (int j = 0; j < h.radacini.size(); j++)
+        {
+            if (h.radacini[j] != NULL) {
+                if (max_nod->valoare < h.radacini[j]->valoare)
+                    max_nod = h.radacini[j];
+                int i = h.radacini[j]->grad;
+                Nod *radacina = h.radacini[j];
+                Nod *aux = radacini[h.radacini[j]->grad];
+                while (aux != NULL) {
+                    if (aux->valoare > radacina->valoare) {
+                        aux->fii.push_back(radacina);
+                        radacina->tata = aux;
+                        aux->grad++;
+                        radacina = aux;
+                    } else {
+                        radacina->fii.push_back(aux);
+                        aux->tata = radacina;
+                        radacina->grad++;
+                    }
+                    if (radacina->grad == radacini.size())
+                        radacini.push_back(NULL);
+                    radacini[i] = NULL;
+                    i++;
+                    aux = radacini[i];
+                }
+                radacini[i] = radacina;
+            }
+        }
+        h.delete_heap();
     }
 
-
-
-
-    list<Nod*> repara(list<Nod*> aux){
-        if(aux.size() <= 1)
-            return aux;
-        list<Nod*>::iterator i,j,k;
-        i = j = k = aux.begin();
-
-        if(aux.size() == 2){
-            j = i;
-            j++;
-            k = aux.end();
+    Heap& operator + (Nod* &n)
+    {
+        if (n->tata != NULL)
+            n->tata = NULL;
+        if (radacini.size() < n->grad)
+        {
+            while(radacini.size() <= n->grad)
+                radacini.push_back(NULL);
+            radacini[radacini.size()-1] = n;
         }
-        else{
-            j++;
-            k = j;
-            k++;
-        }
-
-        while (i!=aux.end()){
-            if(j == aux.end())
+        else
+        {
+            int i = n->grad;
+            Nod* radacina = n;
+            Nod* aux = radacini[i];
+            while (aux != NULL)
+            {
+                if (aux->valoare > radacina->valoare)
+                {
+                    aux->fii.push_back(radacina);
+                    radacina->tata = aux;
+                    aux->grad ++;
+                    radacina = aux;
+                }
+                else{
+                    radacina->fii.push_back(aux);
+                    aux->tata = radacina;
+                    radacina->grad ++;
+                }
+                if(radacina->grad == radacini.size())
+                    radacini.push_back(NULL);
+                radacini[i] = NULL;
                 i++;
-            else if((*i)->getOrdin() < (*j)->getOrdin()){
-                i++;
-                j++;
-                if(k!=aux.end())
-                    k++;
+                aux = radacini[i];
             }
-            else if(k!=aux.end() && (*i)->getOrdin() == (*j)->getOrdin() && (*i)->getOrdin() == (*k)->getOrdin()){
-                i++;
-                j++;
-                k++;
-            }
+            radacini[i] = radacina;
+        }
+    }
 
-            else if((*i)->getOrdin() == (*j)->getOrdin()){
-                *i = mergeHeap2(*i,*j);
-                j = aux.erase(j);
-                if(k!=aux.end())
-                    k++;
+    void display(){
+        int nr_radacini = 0;
+        cout << "Heapul binomial: " << endl;
+        cout << radacini.size() << endl;
+        for(int i = 0; i < radacini.size(); i++)
+        {
+            if(radacini[i] != NULL) {
+                nr_radacini ++;
+                cout << "\t" << "Radacina " << nr_radacini << " cu valoarea " << radacini[i]->valoare << ": " << endl;
+                radacini[i]->display();
             }
         }
-
-        return aux;
+        cout << endl << "Numar radacini: " << nr_radacini;
 
     }
 
-
-
-
-
-
-
-//    void push(int aux){
-//        Nod* aux2 = radacina->getFrate(); ///
-//        radacina->setFrate(new Nod(aux));
-//        radacina->getFrate()->setFrate(aux2);
-//
-//    }
-
-
-
-    list<Nod*> Adaug_Arbore(Heap h, Nod* arbore){
-        list<Nod*> aux;
-        aux.push_back(arbore);
-        aux = merge(h,aux);
-        return repara(aux);
-    }
-
-
-
-    list<Nod*> Pop_max(list<Nod*> h){
-        list<Nod*> rez;
-        list<Nod*> aux;
-        Nod* aux2;
-
-        aux2 = Afis_Max(h);
-        for(auto i = h.begin();i <= h.end();i++){
-            if(*i != aux2)
-                rez.push_back(*i);
-
+    void eliminare_maxim(){
+        Heap h(*this);
+        cout << "Maximul: " << h.max_nod->valoare << endl;
+        h.radacini[h.max_nod->grad] = NULL;
+        for (int i = 0; i < h.max_nod->fii.size(); i++) {
+            h + h.max_nod->fii[i];
         }
-
-        aux = Elim_Min_Arb(aux2);
-        rez = mergeHeap2(rez,aux);
-        rez = repara(rez);
-        return rez;
-
-    }
-
-
-    Nod* Afis_Max(list<Nod*> h){
-        auto i = h.begin();
-        Nod* aux = *i;
-        while (i!=h.end()){
-            if((*i)->getValoare() > aux->getValoare())
-                aux = *i;
-            i++;
-
+        Nod* new_max = new Nod();
+        for (int i = 0; i < h.radacini.size(); i++) {
+            if (h.radacini[i]->valoare > new_max->valoare)
+                new_max = h.radacini[i];
         }
-        return aux;
-
-    }
-
-
-    list<Nod*> Adaugare_Nod(list<Nod*> k,int cheie){
-        Nod* aux  = Nod(cheie);
-        return Adaug_Arbore(k,aux);
+        h.max_nod = new_max;
     }
 
 
 };
 
+int main() {
+    Heap h;
+    h.insert(3);
+    h.insert(1);
+    h.insert(2);
+    h.insert(5);
+    h.insert(9);
+    h.insert(8);
+    h.insert(12);
+    h.insert(4);
+    h.insert(69);
+    h.insert(11);
+    h.insert(14);
+    h.insert(23);
+    h.insert(58);
+    h.insert(91);
+    h.insert(80);
+    h.insert(12);
+    //h.insert(5);
+//    Nod* n = new Nod();
+//    n->valoare = 3;
+//    h+n;
+//    Nod* m = new Nod();
+//    m->valoare = 4;
+//    h+m;
 
 
 
+    h.display();
 
 
-
-
-
-
-
-
-
-int main()
-{
-    int n,nr;
-    cin >> n >> nr;
-    Heap* heapuri =new Heap[n];
-    for(int i =0; i<=nr;i++){
-        int operatie;
-        cin >> operatie;
-        switch (operatie) {
-            case 1:{
-                int x, val;
-                cin >> x >> val;
-                heapuri[x].Adaugare_Nod(heapuri[x].radacina, val);
-            }
-            case 2:{
-                int x;
-                cin >> x;
-                heapuri[x].Afis_Max(heapuri[x].getRadacina());
-                cout << *i.getVal();
-                heapuri[x] = Pop_max(heapuri[x].radacina);
-            }
-
-            case 3:{
-                int x,y;
-                cin >> x >> y;
-                heapuri[x] = Merge(heapuri[x].radacina, heapuri[x].radacina);
-                heapuri[x].repara();
-                heapuri[y].erase()
-            }
-
-
-        }
-    }
+    return 0;
+}
